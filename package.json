@@ -1,0 +1,24 @@
+{
+	"name": "grafana-pdc-agent-as-fargate",
+	"version": "1.0.0",
+	"description": "",
+	"scripts": {
+		"test": "pnpm -r test:ci",
+		"type-check": "pnpm -r type-check",
+		"lint": "pnpm biome check .",
+		"check": "pnpm run '/(lint|test|type-check)/'",
+		"cdk": "pnpm run --filter=cdk cdk",
+		"prepare": "husky"
+	},
+	"license": "MIT",
+	"devDependencies": {
+		"@biomejs/biome": "1.8.0",
+		"husky": "^9.1.5",
+		"typescript": "^5.5.4"
+	},
+	"engines": {
+		"node": "^22.x.x",
+		"pnpm": "^9.x.x"
+	},
+	"packageManager": "pnpm@9.5.0"
+}

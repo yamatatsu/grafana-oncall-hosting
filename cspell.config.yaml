@@ -1,0 +1,10 @@
+version: "0.2"
+ignorePaths: []
+dictionaryDefinitions: []
+dictionaries: []
+words:
+  - dbname
+  - Fargate
+  - gcloud
+ignoreWords: []
+import: []
