@@ -1,0 +1,700 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`Snapshot test 1`] = `
+{
+  "Parameters": {
+    "BootstrapVersion": {
+      "Default": "/cdk-bootstrap/hnb659fds/version",
+      "Description": "Version of the CDK Bootstrap resources in this environment, automatically retrieved from SSM Parameter Store. [cdk:skip]",
+      "Type": "AWS::SSM::Parameter::Value<String>",
+    },
+    "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61arm64C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-arm64",
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+    },
+  },
+  "Resources": {
+    "VpcC3027511": {
+      "Properties": {
+        "CidrBlock": "10.0.0.0/16",
+        "EnableDnsHostnames": true,
+        "EnableDnsSupport": true,
+        "InstanceTenancy": "default",
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::VPC",
+    },
+    "VpcIGW488B0FEB": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc",
+          },
+        ],
+      },
+      "Type": "AWS::EC2::InternetGateway",
+    },
+    "VpcIsolatedSubnet1RouteTableAssociation0FC379C3": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcIsolatedSubnet1RouteTableF057227C",
+        },
+        "SubnetId": {
+          "Ref": "VpcIsolatedSubnet1SubnetDC3C6AF8",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcIsolatedSubnet1RouteTableF057227C": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcIsolatedSubnet1SubnetDC3C6AF8": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.4.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/IsolatedSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcIsolatedSubnet2RouteTableAssociation8E8989F5": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcIsolatedSubnet2RouteTableBAB510EF",
+        },
+        "SubnetId": {
+          "Ref": "VpcIsolatedSubnet2SubnetB479B99C",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcIsolatedSubnet2RouteTableBAB510EF": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcIsolatedSubnet2SubnetB479B99C": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.5.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Isolated",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/IsolatedSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcNatSecurityGroup810E8F8C": {
+      "Properties": {
+        "GroupDescription": "Security Group for NAT instances",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcPrivateSubnet1DefaultRouteF704DE9F": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": {
+          "Ref": "VpcPublicSubnet1NatInstanceABFD54A8",
+        },
+        "RouteTableId": {
+          "Ref": "VpcPrivateSubnet1RouteTable901BAEEE",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcPrivateSubnet1RouteTable901BAEEE": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcPrivateSubnet1RouteTableAssociation2BC202CB": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcPrivateSubnet1RouteTable901BAEEE",
+        },
+        "SubnetId": {
+          "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcPrivateSubnet1Subnet67A4DBCB": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.2.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PrivateSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcPrivateSubnet2DefaultRoute5FAC9901": {
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "InstanceId": {
+          "Ref": "VpcPublicSubnet2NatInstanceB36A9521",
+        },
+        "RouteTableId": {
+          "Ref": "VpcPrivateSubnet2RouteTable1EA00C9D",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcPrivateSubnet2RouteTable1EA00C9D": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcPrivateSubnet2RouteTableAssociationFA51927B": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcPrivateSubnet2RouteTable1EA00C9D",
+        },
+        "SubnetId": {
+          "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcPrivateSubnet2SubnetC8EB537D": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.3.0/24",
+        "MapPublicIpOnLaunch": false,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Private",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Private",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PrivateSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcPublicSubnet1DefaultRoute0F5C6C43": {
+      "DependsOn": [
+        "VpcVPCGW42EC8516",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "VpcIGW488B0FEB",
+        },
+        "RouteTableId": {
+          "Ref": "VpcPublicSubnet1RouteTable431DD755",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcPublicSubnet1NatInstanceABFD54A8": {
+      "DependsOn": [
+        "VpcPublicSubnet1NatInstanceInstanceRoleE102367C",
+      ],
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "IamInstanceProfile": {
+          "Ref": "VpcPublicSubnet1NatInstanceInstanceProfile65B2A5BB",
+        },
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61arm64C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "InstanceType": "t4g.nano",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcNatSecurityGroup810E8F8C",
+              "GroupId",
+            ],
+          },
+        ],
+        "SourceDestCheck": false,
+        "SubnetId": {
+          "Ref": "VpcPublicSubnet1Subnet8E8DEDC0",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet1/NatInstance",
+          },
+        ],
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash
+yum install iptables-services -y
+systemctl enable iptables
+systemctl start iptables
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/custom-ip-forwarding.conf
+sudo sysctl -p /etc/sysctl.d/custom-ip-forwarding.conf
+sudo /sbin/iptables -t nat -A POSTROUTING -o $(route | awk '/^default/{print $NF}') -j MASQUERADE
+sudo /sbin/iptables -F FORWARD
+sudo service iptables save",
+        },
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "VpcPublicSubnet1NatInstanceInstanceProfile65B2A5BB": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "VpcPublicSubnet1NatInstanceInstanceRoleE102367C",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "VpcPublicSubnet1NatInstanceInstanceRoleE102367C": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet1/NatInstance",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "VpcPublicSubnet1RouteTable431DD755": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcPublicSubnet1RouteTableAssociationBBCB7AA1": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcPublicSubnet1RouteTable431DD755",
+        },
+        "SubnetId": {
+          "Ref": "VpcPublicSubnet1Subnet8E8DEDC0",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcPublicSubnet1Subnet8E8DEDC0": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.0.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcPublicSubnet2DefaultRouteD629179A": {
+      "DependsOn": [
+        "VpcVPCGW42EC8516",
+      ],
+      "Properties": {
+        "DestinationCidrBlock": "0.0.0.0/0",
+        "GatewayId": {
+          "Ref": "VpcIGW488B0FEB",
+        },
+        "RouteTableId": {
+          "Ref": "VpcPublicSubnet2RouteTable77FB35FC",
+        },
+      },
+      "Type": "AWS::EC2::Route",
+    },
+    "VpcPublicSubnet2NatInstanceB36A9521": {
+      "DependsOn": [
+        "VpcPublicSubnet2NatInstanceInstanceRole65214B71",
+      ],
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "IamInstanceProfile": {
+          "Ref": "VpcPublicSubnet2NatInstanceInstanceProfileA3FF110C",
+        },
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestal2023amikernel61arm64C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "InstanceType": "t4g.nano",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "VpcNatSecurityGroup810E8F8C",
+              "GroupId",
+            ],
+          },
+        ],
+        "SourceDestCheck": false,
+        "SubnetId": {
+          "Ref": "VpcPublicSubnet2SubnetA811849C",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet2/NatInstance",
+          },
+        ],
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash
+yum install iptables-services -y
+systemctl enable iptables
+systemctl start iptables
+echo "net.ipv4.ip_forward=1" > /etc/sysctl.d/custom-ip-forwarding.conf
+sudo sysctl -p /etc/sysctl.d/custom-ip-forwarding.conf
+sudo /sbin/iptables -t nat -A POSTROUTING -o $(route | awk '/^default/{print $NF}') -j MASQUERADE
+sudo /sbin/iptables -F FORWARD
+sudo service iptables save",
+        },
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "VpcPublicSubnet2NatInstanceInstanceProfileA3FF110C": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "VpcPublicSubnet2NatInstanceInstanceRole65214B71",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "VpcPublicSubnet2NatInstanceInstanceRole65214B71": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet2/NatInstance",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "VpcPublicSubnet2RouteTable77FB35FC": {
+      "Properties": {
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::RouteTable",
+    },
+    "VpcPublicSubnet2RouteTableAssociation3AFE92E6": {
+      "Properties": {
+        "RouteTableId": {
+          "Ref": "VpcPublicSubnet2RouteTable77FB35FC",
+        },
+        "SubnetId": {
+          "Ref": "VpcPublicSubnet2SubnetA811849C",
+        },
+      },
+      "Type": "AWS::EC2::SubnetRouteTableAssociation",
+    },
+    "VpcPublicSubnet2SubnetA811849C": {
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            1,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "CidrBlock": "10.0.1.0/24",
+        "MapPublicIpOnLaunch": true,
+        "Tags": [
+          {
+            "Key": "aws-cdk:subnet-name",
+            "Value": "Public",
+          },
+          {
+            "Key": "aws-cdk:subnet-type",
+            "Value": "Public",
+          },
+          {
+            "Key": "Name",
+            "Value": "Target/Vpc/Vpc/PublicSubnet2",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::Subnet",
+    },
+    "VpcS3EndpointForPrivate6699B800": {
+      "Properties": {
+        "RouteTableIds": [
+          {
+            "Ref": "VpcPrivateSubnet1RouteTable901BAEEE",
+          },
+          {
+            "Ref": "VpcPrivateSubnet2RouteTable1EA00C9D",
+          },
+        ],
+        "ServiceName": {
+          "Fn::Join": [
+            "",
+            [
+              "com.amazonaws.",
+              {
+                "Ref": "AWS::Region",
+              },
+              ".s3",
+            ],
+          ],
+        },
+        "VpcEndpointType": "Gateway",
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::VPCEndpoint",
+    },
+    "VpcVPCGW42EC8516": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "VpcIGW488B0FEB",
+        },
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+  },
+  "Rules": {
+    "CheckBootstrapVersion": {
+      "Assertions": [
+        {
+          "Assert": {
+            "Fn::Not": [
+              {
+                "Fn::Contains": [
+                  [
+                    "1",
+                    "2",
+                    "3",
+                    "4",
+                    "5",
+                  ],
+                  {
+                    "Ref": "BootstrapVersion",
+                  },
+                ],
+              },
+            ],
+          },
+          "AssertDescription": "CDK bootstrap stack version 6 required. Please run 'cdk bootstrap' with a recent version of the CDK CLI.",
+        },
+      ],
+    },
+  },
+}
+`;

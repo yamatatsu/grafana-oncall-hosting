@@ -1,0 +1,23 @@
+{
+	"extends": "../../tsconfig.json",
+	"compilerOptions": {
+		"target": "ES2022",
+		"declaration": false,
+		"lib": ["es2022"],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"esModuleInterop": true,
+
+		/* Bundler mode */
+		"allowImportingTsExtensions": true,
+		"resolveJsonModule": true,
+		"isolatedModules": true,
+		"noEmit": true,
+
+		/* Linting */
+		"noUnusedLocals": true,
+		"noUnusedParameters": true,
+		"noFallthroughCasesInSwitch": true
+	},
+	"exclude": ["node_modules", "cdk.out"]
+}
