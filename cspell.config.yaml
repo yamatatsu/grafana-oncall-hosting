@@ -3,8 +3,13 @@ ignorePaths: []
 dictionaryDefinitions: []
 dictionaries: []
 words:
+  - amazonmq
   - dbname
   - Fargate
   - gcloud
+  - memorydb
+  - noinput
+  - Oncall
+  - RABBITMQ
 ignoreWords: []
 import: []

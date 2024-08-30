@@ -46,7 +46,7 @@ export class Vpc extends Construct {
 				},
 			],
 		});
-		vpc.addGatewayEndpoint("S3EndpointForPrivate", {
+		vpc.addGatewayEndpoint(`${id}-S3EndpointForPrivate`, {
 			service: ec2.GatewayVpcEndpointAwsService.S3,
 			subnets: [{ subnetType: ec2.SubnetType.PRIVATE_WITH_EGRESS }],
 		});

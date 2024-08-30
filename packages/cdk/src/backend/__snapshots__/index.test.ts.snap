@@ -2,6 +2,14 @@
 
 exports[`Snapshot test 1`] = `
 {
+  "Outputs": {
+    "AuroraBastionHostBastionHostId41E0EBC0": {
+      "Description": "Instance ID of the bastion host. Use this to connect via SSM Session Manager",
+      "Value": {
+        "Ref": "AuroraBastionHostC24C6193",
+      },
+    },
+  },
   "Parameters": {
     "BootstrapVersion": {
       "Default": "/cdk-bootstrap/hnb659fds/version",
@@ -12,8 +20,405 @@ exports[`Snapshot test 1`] = `
       "Default": "/aws/service/ami-amazon-linux-latest/al2023-ami-kernel-6.1-arm64",
       "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
     },
+    "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amikernel510hvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter": {
+      "Default": "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2",
+      "Type": "AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>",
+    },
   },
   "Resources": {
+    "Aurora3FE0D001": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "CopyTagsToSnapshot": true,
+        "DBClusterParameterGroupName": {
+          "Ref": "AuroraAuroraauroraparametersgroupAC543997",
+        },
+        "DBSubnetGroupName": {
+          "Ref": "AuroraSubnets580C9E00",
+        },
+        "DatabaseName": "mydb",
+        "Engine": "aurora-mysql",
+        "EngineVersion": "8.0.mysql_aurora.3.06.0",
+        "MasterUserPassword": {
+          "Fn::Join": [
+            "",
+            [
+              "{{resolve:secretsmanager:",
+              {
+                "Ref": "TargetAuroraSecret2DEF1BBF3fdaad7efa858a3daf9490cf0a702aeb",
+              },
+              ":SecretString:password::}}",
+            ],
+          ],
+        },
+        "MasterUsername": "admin",
+        "PreferredMaintenanceWindow": "Sat:17:00-Sat:17:30",
+        "VpcSecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "AuroraSecurityGroup467E7067",
+              "GroupId",
+            ],
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBCluster",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuroraAuroraauroraparametersgroupAC543997": {
+      "Properties": {
+        "Description": "Cluster parameter group for aurora-mysql8.0",
+        "Family": "aurora-mysql8.0",
+        "Parameters": {
+          "character_set_client": "utf8mb4",
+          "character_set_server": "utf8mb4",
+          "server_audit_events": "CONNECT,QUERY,TABLE",
+          "server_audit_logging": "1",
+        },
+      },
+      "Type": "AWS::RDS::DBClusterParameterGroup",
+    },
+    "AuroraBastionHostC24C6193": {
+      "DependsOn": [
+        "AuroraBastionHostInstanceRoleDefaultPolicy0B0D2B8A",
+        "AuroraBastionHostInstanceRoleEDA435D4",
+      ],
+      "Properties": {
+        "AvailabilityZone": {
+          "Fn::Select": [
+            0,
+            {
+              "Fn::GetAZs": "",
+            },
+          ],
+        },
+        "IamInstanceProfile": {
+          "Ref": "AuroraBastionHostInstanceProfileD80005D6",
+        },
+        "ImageId": {
+          "Ref": "SsmParameterValueawsserviceamiamazonlinuxlatestamzn2amikernel510hvmx8664gp2C96584B6F00A464EAD1953AFF4B05118Parameter",
+        },
+        "InstanceType": "t3.nano",
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "AuroraBastionHostInstanceSecurityGroup3B0F6505",
+              "GroupId",
+            ],
+          },
+        ],
+        "SubnetId": {
+          "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BastionHost",
+          },
+        ],
+        "UserData": {
+          "Fn::Base64": "#!/bin/bash",
+        },
+      },
+      "Type": "AWS::EC2::Instance",
+    },
+    "AuroraBastionHostInstanceProfileD80005D6": {
+      "Properties": {
+        "Roles": [
+          {
+            "Ref": "AuroraBastionHostInstanceRoleEDA435D4",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::InstanceProfile",
+    },
+    "AuroraBastionHostInstanceRoleDefaultPolicy0B0D2B8A": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ssmmessages:*",
+                "ssm:UpdateInstanceInformation",
+                "ec2messages:*",
+              ],
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "AuroraBastionHostInstanceRoleDefaultPolicy0B0D2B8A",
+        "Roles": [
+          {
+            "Ref": "AuroraBastionHostInstanceRoleEDA435D4",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "AuroraBastionHostInstanceRoleEDA435D4": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ec2.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BastionHost",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "AuroraBastionHostInstanceSecurityGroup3B0F6505": {
+      "Properties": {
+        "GroupDescription": "Target/Aurora/BastionHost/Resource/InstanceSecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "Tags": [
+          {
+            "Key": "Name",
+            "Value": "BastionHost",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AuroraGrafanaDBSecretBB1C63CF": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {
+          "ExcludePunctuation": true,
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": {
+            "Fn::Join": [
+              "",
+              [
+                "{"host":"",
+                {
+                  "Fn::GetAtt": [
+                    "Aurora3FE0D001",
+                    "Endpoint.Address",
+                  ],
+                },
+                "","dbname":"grafana","username":"grafana-admin"}",
+              ],
+            ],
+          },
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuroraOncallDBSecret6B152582": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {
+          "ExcludePunctuation": true,
+          "GenerateStringKey": "password",
+          "SecretStringTemplate": {
+            "Fn::Join": [
+              "",
+              [
+                "{"host":"",
+                {
+                  "Fn::GetAtt": [
+                    "Aurora3FE0D001",
+                    "Endpoint.Address",
+                  ],
+                },
+                "","dbname":"oncall","username":"oncall-admin"}",
+              ],
+            ],
+          },
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "AuroraSecretAttachment3E825A9F": {
+      "Properties": {
+        "SecretId": {
+          "Ref": "TargetAuroraSecret2DEF1BBF3fdaad7efa858a3daf9490cf0a702aeb",
+        },
+        "TargetId": {
+          "Ref": "Aurora3FE0D001",
+        },
+        "TargetType": "AWS::RDS::DBCluster",
+      },
+      "Type": "AWS::SecretsManager::SecretTargetAttachment",
+    },
+    "AuroraSecurityGroup467E7067": {
+      "Properties": {
+        "GroupDescription": "RDS security group",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "AuroraSecurityGroupfromTargetAuroraBastionHostInstanceSecurityGroupC43FC1283306185532B5": {
+      "Properties": {
+        "Description": "from TargetAuroraBastionHostInstanceSecurityGroupC43FC128:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraSecurityGroup467E7067",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AuroraBastionHostInstanceSecurityGroup3B0F6505",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AuroraSubnets580C9E00": {
+      "Properties": {
+        "DBSubnetGroupDescription": "Subnets for Aurora database",
+        "SubnetIds": [
+          {
+            "Ref": "VpcIsolatedSubnet1SubnetDC3C6AF8",
+          },
+          {
+            "Ref": "VpcIsolatedSubnet2SubnetB479B99C",
+          },
+        ],
+      },
+      "Type": "AWS::RDS::DBSubnetGroup",
+    },
+    "Aurorawriter398FC05B": {
+      "DeletionPolicy": "Delete",
+      "DependsOn": [
+        "VpcIsolatedSubnet1RouteTableAssociation0FC379C3",
+        "VpcIsolatedSubnet2RouteTableAssociation8E8989F5",
+      ],
+      "Properties": {
+        "DBClusterIdentifier": {
+          "Ref": "Aurora3FE0D001",
+        },
+        "DBInstanceClass": "db.t3.medium",
+        "Engine": "aurora-mysql",
+        "PromotionTier": 0,
+        "PubliclyAccessible": false,
+      },
+      "Type": "AWS::RDS::DBInstance",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "FargateCluster76631EA2": {
+      "Type": "AWS::ECS::Cluster",
+    },
+    "MemoryDBCluster95B2D5ED": {
+      "DependsOn": [
+        "MemoryDBSubnetGroup5ECB6842",
+      ],
+      "Properties": {
+        "ACLName": "open-access",
+        "AutoMinorVersionUpgrade": true,
+        "ClusterName": "grafana-oncall",
+        "EngineVersion": "7.1",
+        "NodeType": "db.t4g.small",
+        "NumReplicasPerShard": 1,
+        "NumShards": 1,
+        "SecurityGroupIds": [
+          {
+            "Fn::GetAtt": [
+              "MemoryDBSecurityGroup5D27B3E7",
+              "GroupId",
+            ],
+          },
+        ],
+        "SubnetGroupName": "memorydb-subnet-group",
+        "TLSEnabled": true,
+      },
+      "Type": "AWS::MemoryDB::Cluster",
+    },
+    "MemoryDBSecurityGroup5D27B3E7": {
+      "Properties": {
+        "GroupDescription": "MemoryDB Security Group",
+        "GroupName": "memorydb-security-group",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "MemoryDBSubnetGroup5ECB6842": {
+      "Properties": {
+        "Description": "MemoryDB Subnet Group",
+        "SubnetGroupName": "memorydb-subnet-group",
+        "SubnetIds": [
+          {
+            "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+          },
+          {
+            "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+          },
+        ],
+      },
+      "Type": "AWS::MemoryDB::SubnetGroup",
+    },
+    "TargetAuroraSecret2DEF1BBF3fdaad7efa858a3daf9490cf0a702aeb": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "Description": {
+          "Fn::Join": [
+            "",
+            [
+              "Generated by the CDK for stack: ",
+              {
+                "Ref": "AWS::StackName",
+              },
+            ],
+          ],
+        },
+        "GenerateSecretString": {
+          "ExcludeCharacters": " %+~\`#$&*()|[]{}:;<>?!'/@"\\",
+          "GenerateStringKey": "password",
+          "PasswordLength": 30,
+          "SecretStringTemplate": "{"username":"admin"}",
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
     "VpcC3027511": {
       "Properties": {
         "CidrBlock": "10.0.0.0/16",
@@ -175,6 +580,25 @@ exports[`Snapshot test 1`] = `
         },
       },
       "Type": "AWS::EC2::SecurityGroup",
+    },
+    "VpcNatSecurityGroupfromTargetAuroraBastionHostInstanceSecurityGroupC43FC128ALLTRAFFIC94591A74": {
+      "Properties": {
+        "Description": "from TargetAuroraBastionHostInstanceSecurityGroupC43FC128:ALL TRAFFIC",
+        "GroupId": {
+          "Fn::GetAtt": [
+            "VpcNatSecurityGroup810E8F8C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "AuroraBastionHostInstanceSecurityGroup3B0F6505",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
     },
     "VpcPrivateSubnet1DefaultRouteF704DE9F": {
       "Properties": {
@@ -628,7 +1052,18 @@ sudo service iptables save",
       },
       "Type": "AWS::EC2::Subnet",
     },
-    "VpcS3EndpointForPrivate6699B800": {
+    "VpcVPCGW42EC8516": {
+      "Properties": {
+        "InternetGatewayId": {
+          "Ref": "VpcIGW488B0FEB",
+        },
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::VPCGatewayAttachment",
+    },
+    "VpcVpcS3EndpointForPrivate54C54F5D": {
       "Properties": {
         "RouteTableIds": [
           {
@@ -656,17 +1091,6 @@ sudo service iptables save",
         },
       },
       "Type": "AWS::EC2::VPCEndpoint",
-    },
-    "VpcVPCGW42EC8516": {
-      "Properties": {
-        "InternetGatewayId": {
-          "Ref": "VpcIGW488B0FEB",
-        },
-        "VpcId": {
-          "Ref": "VpcC3027511",
-        },
-      },
-      "Type": "AWS::EC2::VPCGatewayAttachment",
     },
   },
   "Rules": {
