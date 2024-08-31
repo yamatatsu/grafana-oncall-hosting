@@ -1,5 +1,6 @@
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
@@ -7,17 +8,19 @@ import { Construct } from "constructs";
 interface Props {
 	cluster: ecs.ICluster;
 	grafanaDBSecret: secretsmanager.ISecret;
+	serverDomain: string;
 }
 /**
  * - Fargate for Grafana
  */
 export class GrafanaService extends Construct {
 	public readonly service: ecs.BaseService;
+	public readonly targetGroup: elb.IApplicationTargetGroup;
 
 	constructor(scope: Construct, id: string, props: Props) {
 		super(scope, id);
 
-		const { cluster, grafanaDBSecret } = props;
+		const { cluster, grafanaDBSecret, serverDomain } = props;
 
 		// Grafana Admin Password
 		const grafanaAdminPassword = new secretsmanager.Secret(
@@ -61,6 +64,9 @@ export class GrafanaService extends Construct {
 				),
 			},
 			environment: {
+				GF_SERVER_DOMAIN: serverDomain,
+				GF_SERVER_ROOT_URL: `http://${serverDomain}/grafana`,
+				GF_SERVER_SERVE_FROM_SUB_PATH: "true",
 				GF_DATABASE_TYPE: "mysql",
 				GF_SECURITY_ADMIN_USER: "admin",
 				GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "grafana-oncall-app",
@@ -84,6 +90,19 @@ export class GrafanaService extends Construct {
 			},
 		});
 
+		const targetGroup = new elb.ApplicationTargetGroup(
+			this,
+			"GrafanaTargetGroup",
+			{
+				vpc: cluster.vpc,
+				targets: [fargateService],
+				protocol: elb.ApplicationProtocol.HTTP,
+				port: 3000,
+				healthCheck: { path: "/api/health" },
+			},
+		);
+
 		this.service = fargateService;
+		this.targetGroup = targetGroup;
 	}
 }

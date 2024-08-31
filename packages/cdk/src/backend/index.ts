@@ -1,5 +1,7 @@
 import * as cdk from "aws-cdk-lib";
+import * as ec2 from "aws-cdk-lib/aws-ec2";
 import type { Construct } from "constructs";
+import { Alb } from "./alb";
 import { Aurora } from "./aurora";
 import { FargateCluster } from "./fargate-cluster";
 import { GrafanaService } from "./grafana-service";
@@ -20,6 +22,10 @@ export class BackendStack extends cdk.Stack {
 		);
 
 		const vpc = new Vpc(this, "Vpc");
+
+		const alb = new Alb(this, "ALB", {
+			vpc: vpc.vpc,
+		});
 
 		const aurora = new Aurora(this, "Aurora", {
 			vpc: vpc.vpc,
@@ -52,6 +58,7 @@ export class BackendStack extends cdk.Stack {
 		const grafanaService = new GrafanaService(this, "GrafanaService", {
 			cluster: fargateCluster.cluster,
 			grafanaDBSecret: aurora.grafanaDBSecret,
+			serverDomain: alb.dnsName,
 		});
 		vpc.allowOutboundFrom(grafanaService.service);
 		aurora.allowAccessDBFrom(grafanaService.service);
@@ -63,5 +70,11 @@ export class BackendStack extends cdk.Stack {
 		vpc.allowOutboundFrom(oncallService.service);
 		aurora.allowAccessDBFrom(oncallService.service);
 		memorydb.allowFrom(oncallService.service);
+
+		alb.listener.addTargetGroups("GrafanaTargetGroup", {
+			targetGroups: [grafanaService.targetGroup],
+			// conditions: [elb.ListenerCondition.pathPatterns(["/grafana/*"])],
+			// priority: 1,
+		});
 	}
 }
