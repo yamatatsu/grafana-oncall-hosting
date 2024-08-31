@@ -5,11 +5,13 @@ dictionaries: []
 words:
   - amazonmq
   - dbname
+  - elasticloadbalancingv2
   - Fargate
   - gcloud
   - memorydb
   - noinput
   - Oncall
   - RABBITMQ
+  - uwsgi
 ignoreWords: []
 import: []

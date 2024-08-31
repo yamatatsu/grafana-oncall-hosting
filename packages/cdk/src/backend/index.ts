@@ -1,5 +1,4 @@
 import * as cdk from "aws-cdk-lib";
-import * as ec2 from "aws-cdk-lib/aws-ec2";
 import type { Construct } from "constructs";
 import { Alb } from "./alb";
 import { Aurora } from "./aurora";
@@ -55,10 +54,13 @@ export class BackendStack extends cdk.Stack {
 			return;
 		}
 
+		const grafanaRootUrl = `http://${alb.dnsName}/grafana`;
+		const oncallRootUrl = `http://${alb.dnsName}/oncall`;
+
 		const grafanaService = new GrafanaService(this, "GrafanaService", {
 			cluster: fargateCluster.cluster,
 			grafanaDBSecret: aurora.grafanaDBSecret,
-			serverDomain: alb.dnsName,
+			rootUrl: grafanaRootUrl,
 		});
 		vpc.allowOutboundFrom(grafanaService.service);
 		aurora.allowAccessDBFrom(grafanaService.service);
@@ -66,6 +68,10 @@ export class BackendStack extends cdk.Stack {
 		const oncallService = new OncallService(this, "OncallService", {
 			cluster: fargateCluster.cluster,
 			oncallDBSecret: aurora.oncallDBSecret,
+			rootUrl: oncallRootUrl,
+			// TODO: not use internet
+			grafanaApiUrl: grafanaRootUrl,
+			redisUri: memorydb.redisUri,
 		});
 		vpc.allowOutboundFrom(oncallService.service);
 		aurora.allowAccessDBFrom(oncallService.service);

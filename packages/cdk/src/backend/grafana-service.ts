@@ -8,7 +8,7 @@ import { Construct } from "constructs";
 interface Props {
 	cluster: ecs.ICluster;
 	grafanaDBSecret: secretsmanager.ISecret;
-	serverDomain: string;
+	rootUrl: string;
 }
 /**
  * - Fargate for Grafana
@@ -20,7 +20,7 @@ export class GrafanaService extends Construct {
 	constructor(scope: Construct, id: string, props: Props) {
 		super(scope, id);
 
-		const { cluster, grafanaDBSecret, serverDomain } = props;
+		const { cluster, grafanaDBSecret, rootUrl } = props;
 
 		// Grafana Admin Password
 		const grafanaAdminPassword = new secretsmanager.Secret(
@@ -64,11 +64,12 @@ export class GrafanaService extends Construct {
 				),
 			},
 			environment: {
-				GF_SERVER_DOMAIN: serverDomain,
-				GF_SERVER_ROOT_URL: `http://${serverDomain}/grafana`,
+				GF_SERVER_ROOT_URL: rootUrl,
 				GF_SERVER_SERVE_FROM_SUB_PATH: "true",
 				GF_DATABASE_TYPE: "mysql",
 				GF_SECURITY_ADMIN_USER: "admin",
+
+				// Settings for pre-install OnCall Plugin
 				GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS: "grafana-oncall-app",
 				GF_INSTALL_PLUGINS: "grafana-oncall-app vv1.8.13",
 			},

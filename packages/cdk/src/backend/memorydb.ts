@@ -9,6 +9,7 @@ interface Props {
  * - MemoryDB
  */
 export class MemoryDB extends Construct {
+	public readonly redisUri: string;
 	private readonly securityGroup: ec2.ISecurityGroup;
 
 	constructor(scope: Construct, id: string, props: Props) {
@@ -41,6 +42,7 @@ export class MemoryDB extends Construct {
 		});
 		cluster.addDependency(subnetGroup);
 
+		this.redisUri = `redis://${cluster.attrClusterEndpointAddress}:6379`;
 		this.securityGroup = securityGroup;
 	}
 

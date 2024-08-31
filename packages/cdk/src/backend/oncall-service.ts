@@ -7,6 +7,9 @@ import { Construct } from "constructs";
 interface Props {
 	cluster: ecs.ICluster;
 	oncallDBSecret: secretsmanager.ISecret;
+	rootUrl: string;
+	grafanaApiUrl: string;
+	redisUri: string;
 }
 /**
  * - Fargate for Grafana OnCall
@@ -17,7 +20,7 @@ export class OncallService extends Construct {
 	constructor(scope: Construct, id: string, props: Props) {
 		super(scope, id);
 
-		const { cluster, oncallDBSecret } = props;
+		const { cluster, oncallDBSecret, rootUrl, grafanaApiUrl, redisUri } = props;
 
 		const secretKey = new secretsmanager.Secret(this, "SecretKey");
 
@@ -29,43 +32,42 @@ export class OncallService extends Construct {
 			},
 		});
 
-		// const engine = taskDef.addContainer("Engine", {
-		// 	image: ecs.ContainerImage.fromRegistry("grafana/oncall:v1.8.13"),
-		// 	command: ["sh", "-c", '"uwsgi --ini uwsgi.ini"'],
-		// 	logging: ecs.LogDriver.awsLogs({
-		// 		streamPrefix: "Engine",
-		// 		logRetention: logs.RetentionDays.THREE_MONTHS,
-		// 	}),
-		// 	secrets: {
-		// 		SECRET_KEY: ecs.Secret.fromSecretsManager(secretKey),
-		// 		MYSQL_HOST: ecs.Secret.fromSecretsManager(oncallDBSecret, "host"),
-		// 		MYSQL_DB_NAME: ecs.Secret.fromSecretsManager(oncallDBSecret, "dbname"),
-		// 		MYSQL_USER: ecs.Secret.fromSecretsManager(oncallDBSecret, "username"),
-		// 		MYSQL_PASSWORD: ecs.Secret.fromSecretsManager(
-		// 			oncallDBSecret,
-		// 			"password",
-		// 		),
-		// 	},
-		// 	environment: {
-		// 		MYSQL_PORT: "3306",
-		// 		// CELERY_WORKER_QUEUE:
-		// 		// 	"default,critical,long,slack,telegram,webhook,retry,celery,grafana",
-		// 		// CELERY_WORKER_CONCURRENCY: "1",
-		// 		// CELERY_WORKER_MAX_TASKS_PER_CHILD: "100",
-		// 		// CELERY_WORKER_SHUTDOWN_INTERVAL: "65m",
-		// 		// CELERY_WORKER_BEAT_ENABLED: "True",
-		// 		BROKER_TYPE: "redis",
-		// 		// TODO: アプリがアクセスできるOnCallサーバーのURL
-		// 		BASE_URL: "http://192.168.50.51:8080",
-		// 		// TODO: MemoryDBのURL
-		// 		REDIS_URI: "redis://redis:6379/0",
-		// 		// TODO: クラスタ内で消費されるgrafanaエンドポイント コード読む
-		// 		GRAFANA_API_URL: "http://grafana:3000",
-		// 		DJANGO_SETTINGS_MODULE: "settings.prod_without_db",
-		// 	},
-		// 	// This image needs to create `tmp` directory.
-		// 	readonlyRootFilesystem: false,
-		// });
+		const secrets = {
+			SECRET_KEY: ecs.Secret.fromSecretsManager(secretKey),
+			MYSQL_HOST: ecs.Secret.fromSecretsManager(oncallDBSecret, "host"),
+			MYSQL_DB_NAME: ecs.Secret.fromSecretsManager(oncallDBSecret, "dbname"),
+			MYSQL_USER: ecs.Secret.fromSecretsManager(oncallDBSecret, "username"),
+			MYSQL_PASSWORD: ecs.Secret.fromSecretsManager(oncallDBSecret, "password"),
+		} satisfies ecs.ContainerDefinitionOptions["secrets"];
+
+		const environment = {
+			DATABASE_TYPE: "mysql",
+			BROKER_TYPE: "redis",
+			BASE_URL: rootUrl, // "http://192.168.50.51:8080",
+			REDIS_URI: redisUri, // "redis://redis:6379/0",
+			DJANGO_SETTINGS_MODULE: "settings.prod_without_db",
+			CELERY_WORKER_QUEUE:
+				"default,critical,long,slack,telegram,webhook,retry,celery,grafana",
+			CELERY_WORKER_CONCURRENCY: "1",
+			CELERY_WORKER_MAX_TASKS_PER_CHILD: "100",
+			CELERY_WORKER_SHUTDOWN_INTERVAL: "65m",
+			CELERY_WORKER_BEAT_ENABLED: "True",
+			GRAFANA_API_URL: grafanaApiUrl,
+			MYSQL_PORT: "",
+		} satisfies ecs.ContainerDefinitionOptions["environment"];
+
+		const engine = taskDef.addContainer("Engine", {
+			image: ecs.ContainerImage.fromRegistry("grafana/oncall:v1.8.13"),
+			command: ["uwsgi", "--ini", "uwsgi.ini"],
+			logging: ecs.LogDriver.awsLogs({
+				streamPrefix: "Engine",
+				logRetention: logs.RetentionDays.THREE_MONTHS,
+			}),
+			secrets,
+			environment,
+			// This image needs to create `tmp` directory.
+			readonlyRootFilesystem: false,
+		});
 
 		const celery = taskDef.addContainer("Celery", {
 			image: ecs.ContainerImage.fromRegistry("grafana/oncall:v1.8.13"),
@@ -74,26 +76,8 @@ export class OncallService extends Construct {
 				streamPrefix: "Celery",
 				logRetention: logs.RetentionDays.THREE_MONTHS,
 			}),
-			secrets: {
-				SECRET_KEY: ecs.Secret.fromSecretsManager(secretKey),
-				MYSQL_HOST: ecs.Secret.fromSecretsManager(oncallDBSecret, "host"),
-				MYSQL_DB_NAME: ecs.Secret.fromSecretsManager(oncallDBSecret, "dbname"),
-				MYSQL_USER: ecs.Secret.fromSecretsManager(oncallDBSecret, "username"),
-				MYSQL_PASSWORD: ecs.Secret.fromSecretsManager(
-					oncallDBSecret,
-					"password",
-				),
-			},
-			environment: {
-				MYSQL_PORT: "3306",
-				CELERY_WORKER_QUEUE:
-					"default,critical,long,slack,telegram,webhook,retry,celery,grafana",
-				CELERY_WORKER_CONCURRENCY: "1",
-				CELERY_WORKER_MAX_TASKS_PER_CHILD: "100",
-				CELERY_WORKER_SHUTDOWN_INTERVAL: "65m",
-				CELERY_WORKER_BEAT_ENABLED: "True",
-				DJANGO_SETTINGS_MODULE: "settings.prod_without_db",
-			},
+			secrets,
+			environment,
 			// This image needs to create `tmp` directory.
 			readonlyRootFilesystem: false,
 		});
@@ -105,22 +89,16 @@ export class OncallService extends Construct {
 				streamPrefix: "DBMigration",
 				logRetention: logs.RetentionDays.THREE_MONTHS,
 			}),
-			secrets: {
-				MYSQL_HOST: ecs.Secret.fromSecretsManager(oncallDBSecret, "host"),
-				MYSQL_DB_NAME: ecs.Secret.fromSecretsManager(oncallDBSecret, "dbname"),
-				MYSQL_USER: ecs.Secret.fromSecretsManager(oncallDBSecret, "username"),
-				MYSQL_PASSWORD: ecs.Secret.fromSecretsManager(
-					oncallDBSecret,
-					"password",
-				),
-			},
-			environment: {
-				MYSQL_PORT: "3306",
-			},
+			secrets,
+			environment,
 			essential: false,
 			readonlyRootFilesystem: true,
 		});
 
+		engine.addContainerDependencies({
+			container: dbMigration,
+			condition: ecs.ContainerDependencyCondition.SUCCESS,
+		});
 		celery.addContainerDependencies({
 			container: dbMigration,
 			condition: ecs.ContainerDependencyCondition.SUCCESS,
