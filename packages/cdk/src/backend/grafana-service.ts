@@ -29,8 +29,12 @@ export class GrafanaService extends Construct {
 		);
 
 		const taskDef = new ecs.FargateTaskDefinition(this, "TaskDefinition", {
-			cpu: 256,
-			memoryLimitMiB: 512,
+			/**
+			 * respect the implementation of the following link:
+			 * @see https://github.com/aws-samples/aws-cdk-grafana/blob/729a07faaf4edf1d742b1b9cdd5f07dce9e566c9/lib/cdk-grafana-stack.ts#L165
+			 */
+			cpu: 1024, // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+			memoryLimitMiB: 2048, // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
 			runtimePlatform: {
 				cpuArchitecture: ecs.CpuArchitecture.ARM64,
 			},

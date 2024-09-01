@@ -27,8 +27,8 @@ export class OncallService extends Construct {
 		const secretKey = new secretsmanager.Secret(this, "SecretKey");
 
 		const taskDef = new ecs.FargateTaskDefinition(this, "TaskDefinition", {
-			cpu: 256,
-			memoryLimitMiB: 512,
+			cpu: 1024, // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
+			memoryLimitMiB: 2048, // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
 			runtimePlatform: {
 				cpuArchitecture: ecs.CpuArchitecture.ARM64,
 			},
