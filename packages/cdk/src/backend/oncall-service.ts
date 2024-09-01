@@ -25,6 +25,10 @@ export class OncallService extends Construct {
 		const { cluster, oncallDBSecret, rootUrl, grafanaApiUrl, redisUri } = props;
 
 		const secretKey = new secretsmanager.Secret(this, "SecretKey");
+		const mirageSecretKey = new secretsmanager.Secret(this, "MirageSecretKey");
+		const mirageCipherIv = new secretsmanager.Secret(this, "MirageCipherIv", {
+			generateSecretString: { passwordLength: 16 },
+		});
 
 		const taskDef = new ecs.FargateTaskDefinition(this, "TaskDefinition", {
 			cpu: 1024, // https://docs.aws.amazon.com/AmazonECS/latest/developerguide/task-cpu-memory-error.html
@@ -36,6 +40,8 @@ export class OncallService extends Construct {
 
 		const secrets = {
 			SECRET_KEY: ecs.Secret.fromSecretsManager(secretKey),
+			MIRAGE_SECRET_KEY: ecs.Secret.fromSecretsManager(mirageSecretKey),
+			MIRAGE_CIPHER_IV: ecs.Secret.fromSecretsManager(mirageCipherIv),
 			MYSQL_HOST: ecs.Secret.fromSecretsManager(oncallDBSecret, "host"),
 			MYSQL_DB_NAME: ecs.Secret.fromSecretsManager(oncallDBSecret, "dbname"),
 			MYSQL_USER: ecs.Secret.fromSecretsManager(oncallDBSecret, "username"),
@@ -57,7 +63,7 @@ export class OncallService extends Construct {
 			CELERY_WORKER_SHUTDOWN_INTERVAL: "65m",
 			CELERY_WORKER_BEAT_ENABLED: "True",
 			GRAFANA_API_URL: grafanaApiUrl,
-			MYSQL_PORT: "",
+			MYSQL_PORT: "3306",
 		} satisfies ecs.ContainerDefinitionOptions["environment"];
 
 		const engine = taskDef.addContainer("Engine", {

@@ -15,6 +15,8 @@ vi.spyOn(synthetics.Code, "fromAsset").mockReturnValue(
 test("Snapshot test", () => {
 	const app = new cdk.App();
 
+	app.node.setContext("isGrafanaDatabaseCreated", true);
+
 	const stack = new BackendStack(app, "Target", {});
 
 	const template = Template.fromStack(stack);

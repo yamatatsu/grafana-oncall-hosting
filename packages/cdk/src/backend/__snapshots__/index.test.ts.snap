@@ -303,6 +303,48 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
+    "AuroraSecurityGroupfromTargetGrafanaServiceFargateServiceSecurityGroupCF5CFB493306D7CF666F": {
+      "Properties": {
+        "Description": "from TargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraSecurityGroup467E7067",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AuroraSecurityGroupfromTargetOncallServiceFargateServiceSecurityGroup62CBBD553306FAE341F4": {
+      "Properties": {
+        "Description": "from TargetOncallServiceFargateServiceSecurityGroup62CBBD55:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraSecurityGroup467E7067",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "OncallServiceFargateServiceSecurityGroup28BCC824",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
     "AuroraSubnets580C9E00": {
       "Properties": {
         "DBSubnetGroupDescription": "Subnets for Aurora database",
@@ -337,6 +379,480 @@ exports[`Snapshot test 1`] = `
     },
     "FargateCluster76631EA2": {
       "Type": "AWS::ECS::Cluster",
+    },
+    "GrafanaServiceFargateService4FE727BA": {
+      "DependsOn": [
+        "GrafanaServiceTaskDefinitionTaskRole58D661CD",
+        "MainALBListener7261B16A",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "FargateCluster76631EA2",
+        },
+        "DeploymentConfiguration": {
+          "Alarms": {
+            "AlarmNames": [],
+            "Enable": false,
+            "Rollback": false,
+          },
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": false,
+          },
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+        },
+        "DeploymentController": {
+          "Type": "ECS",
+        },
+        "DesiredCount": 1,
+        "EnableECSManagedTags": false,
+        "HealthCheckGracePeriodSeconds": 60,
+        "LaunchType": "FARGATE",
+        "LoadBalancers": [
+          {
+            "ContainerName": "Grafana",
+            "ContainerPort": 3000,
+            "TargetGroupArn": {
+              "Ref": "GrafanaServiceGrafanaTargetGroup3B517F8B",
+            },
+          },
+        ],
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+              },
+              {
+                "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "GrafanaServiceTaskDefinitionAEEF5381",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "GrafanaServiceFargateServiceSecurityGroupB6FC9E23": {
+      "DependsOn": [
+        "GrafanaServiceTaskDefinitionTaskRole58D661CD",
+      ],
+      "Properties": {
+        "GroupDescription": "Target/GrafanaService/FargateService/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "GrafanaServiceFargateServiceSecurityGroupfromTargetMainALBSecurityGroup756C9DCD300081FED9A5": {
+      "DependsOn": [
+        "GrafanaServiceTaskDefinitionTaskRole58D661CD",
+      ],
+      "Properties": {
+        "Description": "Load balancer to target",
+        "FromPort": 3000,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "MainALBSecurityGroup645C0E97",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3000,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "GrafanaServiceGrafanaTargetGroup3B517F8B": {
+      "Properties": {
+        "HealthCheckPath": "/api/health",
+        "Port": 3000,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "GrafanaServiceTaskDefinitionAEEF5381": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Environment": [
+              {
+                "Name": "GF_SERVER_ROOT_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "MainALB27024B77",
+                          "DNSName",
+                        ],
+                      },
+                      "/grafana",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "GF_SERVER_SERVE_FROM_SUB_PATH",
+                "Value": "true",
+              },
+              {
+                "Name": "GF_DATABASE_TYPE",
+                "Value": "mysql",
+              },
+              {
+                "Name": "GF_SECURITY_ADMIN_USER",
+                "Value": "admin",
+              },
+              {
+                "Name": "GF_PLUGINS_ALLOW_LOADING_UNSIGNED_PLUGINS",
+                "Value": "grafana-oncall-app",
+              },
+              {
+                "Name": "GF_INSTALL_PLUGINS",
+                "Value": "grafana-oncall-app vv1.8.13",
+              },
+            ],
+            "Essential": true,
+            "Image": "grafana/grafana:11.1.4",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "GrafanaServiceTaskDefinitionGrafanaLogGroupD795AF6C",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "Grafana",
+              },
+            },
+            "Name": "Grafana",
+            "PortMappings": [
+              {
+                "ContainerPort": 3000,
+                "Protocol": "tcp",
+              },
+            ],
+            "ReadonlyRootFilesystem": false,
+            "Secrets": [
+              {
+                "Name": "GF_SECURITY_ADMIN_PASSWORD",
+                "ValueFrom": {
+                  "Ref": "GrafanaServicegrafanaAdminPassword93E3CFB8",
+                },
+              },
+              {
+                "Name": "GF_DATABASE_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraGrafanaDBSecretBB1C63CF",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "GF_DATABASE_NAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraGrafanaDBSecretBB1C63CF",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "GF_DATABASE_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraGrafanaDBSecretBB1C63CF",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "GF_DATABASE_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraGrafanaDBSecretBB1C63CF",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        "Cpu": "1024",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "GrafanaServiceTaskDefinitionExecutionRole9DBC2006",
+            "Arn",
+          ],
+        },
+        "Family": "TargetGrafanaServiceTaskDefinitionFF715A5C",
+        "Memory": "2048",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+        },
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "GrafanaServiceTaskDefinitionTaskRole58D661CD",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "GrafanaServiceTaskDefinitionExecutionRole9DBC2006": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GrafanaServiceTaskDefinitionExecutionRoleDefaultPolicy16DC53A6": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GrafanaServiceTaskDefinitionGrafanaLogGroupD795AF6C",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "GrafanaServicegrafanaAdminPassword93E3CFB8",
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "AuroraGrafanaDBSecretBB1C63CF",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GrafanaServiceTaskDefinitionExecutionRoleDefaultPolicy16DC53A6",
+        "Roles": [
+          {
+            "Ref": "GrafanaServiceTaskDefinitionExecutionRole9DBC2006",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GrafanaServiceTaskDefinitionGrafanaLogGroupD795AF6C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "GrafanaServiceTaskDefinitionTaskRole58D661CD": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GrafanaServicegrafanaAdminPassword93E3CFB8": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {},
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "MainALB27024B77": {
+      "DependsOn": [
+        "VpcPublicSubnet1DefaultRoute0F5C6C43",
+        "VpcPublicSubnet1RouteTableAssociationBBCB7AA1",
+        "VpcPublicSubnet2DefaultRouteD629179A",
+        "VpcPublicSubnet2RouteTableAssociation3AFE92E6",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "MainALBSecurityGroup645C0E97",
+              "GroupId",
+            ],
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "VpcPublicSubnet1Subnet8E8DEDC0",
+          },
+          {
+            "Ref": "VpcPublicSubnet2SubnetA811849C",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "MainALBListener7261B16A": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "GrafanaServiceGrafanaTargetGroup3B517F8B",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "MainALB27024B77",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "MainALBSecurityGroup645C0E97": {
+      "Properties": {
+        "GroupDescription": "Automatically created Security Group for ELB TargetMainALB8AA0199A",
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow from anyone on port 80",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80,
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "MainALBSecurityGrouptoTargetGrafanaServiceFargateServiceSecurityGroupCF5CFB493000C6EA2189": {
+      "Properties": {
+        "Description": "Load balancer to target",
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+        "FromPort": 3000,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "MainALBSecurityGroup645C0E97",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 3000,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
     },
     "MemoryDBCluster95B2D5ED": {
       "DependsOn": [
@@ -380,6 +896,27 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::EC2::SecurityGroup",
     },
+    "MemoryDBSecurityGroupfromTargetOncallServiceFargateServiceSecurityGroup62CBBD5563795CC9CB09": {
+      "Properties": {
+        "Description": "from TargetOncallServiceFargateServiceSecurityGroup62CBBD55:6379",
+        "FromPort": 6379,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "MemoryDBSecurityGroup5D27B3E7",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "OncallServiceFargateServiceSecurityGroup28BCC824",
+            "GroupId",
+          ],
+        },
+        "ToPort": 6379,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
     "MemoryDBSubnetGroup5ECB6842": {
       "Properties": {
         "Description": "MemoryDB Subnet Group",
@@ -394,6 +931,1024 @@ exports[`Snapshot test 1`] = `
         ],
       },
       "Type": "AWS::MemoryDB::SubnetGroup",
+    },
+    "OncallALBA2831EAA": {
+      "DependsOn": [
+        "VpcPublicSubnet1DefaultRoute0F5C6C43",
+        "VpcPublicSubnet1RouteTableAssociationBBCB7AA1",
+        "VpcPublicSubnet2DefaultRouteD629179A",
+        "VpcPublicSubnet2RouteTableAssociation3AFE92E6",
+      ],
+      "Properties": {
+        "LoadBalancerAttributes": [
+          {
+            "Key": "deletion_protection.enabled",
+            "Value": "false",
+          },
+        ],
+        "Scheme": "internet-facing",
+        "SecurityGroups": [
+          {
+            "Fn::GetAtt": [
+              "OncallALBSecurityGroupFBA3CD16",
+              "GroupId",
+            ],
+          },
+        ],
+        "Subnets": [
+          {
+            "Ref": "VpcPublicSubnet1Subnet8E8DEDC0",
+          },
+          {
+            "Ref": "VpcPublicSubnet2SubnetA811849C",
+          },
+        ],
+        "Type": "application",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::LoadBalancer",
+    },
+    "OncallALBListenerD55FE461": {
+      "Properties": {
+        "DefaultActions": [
+          {
+            "TargetGroupArn": {
+              "Ref": "OncallServiceGrafanaTargetGroupE92422FB",
+            },
+            "Type": "forward",
+          },
+        ],
+        "LoadBalancerArn": {
+          "Ref": "OncallALBA2831EAA",
+        },
+        "Port": 80,
+        "Protocol": "HTTP",
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::Listener",
+    },
+    "OncallALBSecurityGroupFBA3CD16": {
+      "Properties": {
+        "GroupDescription": "Automatically created Security Group for ELB TargetOncallALB9E95D119",
+        "SecurityGroupIngress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow from anyone on port 80",
+            "FromPort": 80,
+            "IpProtocol": "tcp",
+            "ToPort": 80,
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "OncallALBSecurityGrouptoTargetOncallServiceFargateServiceSecurityGroup62CBBD55808002C181BF": {
+      "Properties": {
+        "Description": "Load balancer to target",
+        "DestinationSecurityGroupId": {
+          "Fn::GetAtt": [
+            "OncallServiceFargateServiceSecurityGroup28BCC824",
+            "GroupId",
+          ],
+        },
+        "FromPort": 8080,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "OncallALBSecurityGroupFBA3CD16",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "ToPort": 8080,
+      },
+      "Type": "AWS::EC2::SecurityGroupEgress",
+    },
+    "OncallServiceFargateService5593D100": {
+      "DependsOn": [
+        "OncallALBListenerD55FE461",
+        "OncallServiceTaskDefinitionTaskRole5F2A713A",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "FargateCluster76631EA2",
+        },
+        "DeploymentConfiguration": {
+          "Alarms": {
+            "AlarmNames": [],
+            "Enable": false,
+            "Rollback": false,
+          },
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": false,
+          },
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+        },
+        "DeploymentController": {
+          "Type": "ECS",
+        },
+        "DesiredCount": 1,
+        "EnableECSManagedTags": false,
+        "HealthCheckGracePeriodSeconds": 60,
+        "LaunchType": "FARGATE",
+        "LoadBalancers": [
+          {
+            "ContainerName": "Engine",
+            "ContainerPort": 8080,
+            "TargetGroupArn": {
+              "Ref": "OncallServiceGrafanaTargetGroupE92422FB",
+            },
+          },
+        ],
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "OncallServiceFargateServiceSecurityGroup28BCC824",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+              },
+              {
+                "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "OncallServiceTaskDefinition5FD36A09",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "OncallServiceFargateServiceSecurityGroup28BCC824": {
+      "DependsOn": [
+        "OncallServiceTaskDefinitionTaskRole5F2A713A",
+      ],
+      "Properties": {
+        "GroupDescription": "Target/OncallService/FargateService/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "OncallServiceFargateServiceSecurityGroupfromTargetOncallALBSecurityGroup5EDA1FDA808053399513": {
+      "DependsOn": [
+        "OncallServiceTaskDefinitionTaskRole5F2A713A",
+      ],
+      "Properties": {
+        "Description": "Load balancer to target",
+        "FromPort": 8080,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "OncallServiceFargateServiceSecurityGroup28BCC824",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "OncallALBSecurityGroupFBA3CD16",
+            "GroupId",
+          ],
+        },
+        "ToPort": 8080,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "OncallServiceGrafanaTargetGroupE92422FB": {
+      "Properties": {
+        "HealthCheckPath": "/health/",
+        "Matcher": {
+          "HttpCode": "200",
+        },
+        "Port": 8080,
+        "Protocol": "HTTP",
+        "TargetGroupAttributes": [
+          {
+            "Key": "stickiness.enabled",
+            "Value": "false",
+          },
+        ],
+        "TargetType": "ip",
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::ElasticLoadBalancingV2::TargetGroup",
+    },
+    "OncallServiceMirageCipherIv620F5247": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {
+          "PasswordLength": 16,
+        },
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OncallServiceMirageSecretKeyAD3C2ECB": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {},
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OncallServiceSecretKey09ED8344": {
+      "DeletionPolicy": "Delete",
+      "Properties": {
+        "GenerateSecretString": {},
+      },
+      "Type": "AWS::SecretsManager::Secret",
+      "UpdateReplacePolicy": "Delete",
+    },
+    "OncallServiceTaskDefinition5FD36A09": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Command": [
+              "uwsgi",
+              "--ini",
+              "uwsgi.ini",
+            ],
+            "DependsOn": [
+              {
+                "Condition": "SUCCESS",
+                "ContainerName": "DBMigration",
+              },
+            ],
+            "Environment": [
+              {
+                "Name": "DATABASE_TYPE",
+                "Value": "mysql",
+              },
+              {
+                "Name": "BROKER_TYPE",
+                "Value": "redis",
+              },
+              {
+                "Name": "BASE_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "OncallALBA2831EAA",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_URI",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "redis://",
+                      {
+                        "Fn::GetAtt": [
+                          "MemoryDBCluster95B2D5ED",
+                          "ClusterEndpoint.Address",
+                        ],
+                      },
+                      ":6379",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DJANGO_SETTINGS_MODULE",
+                "Value": "settings.helm",
+              },
+              {
+                "Name": "CELERY_WORKER_QUEUE",
+                "Value": "default,critical,long,slack,telegram,webhook,retry,celery,grafana",
+              },
+              {
+                "Name": "CELERY_WORKER_CONCURRENCY",
+                "Value": "1",
+              },
+              {
+                "Name": "CELERY_WORKER_MAX_TASKS_PER_CHILD",
+                "Value": "100",
+              },
+              {
+                "Name": "CELERY_WORKER_SHUTDOWN_INTERVAL",
+                "Value": "65m",
+              },
+              {
+                "Name": "CELERY_WORKER_BEAT_ENABLED",
+                "Value": "True",
+              },
+              {
+                "Name": "GRAFANA_API_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "MainALB27024B77",
+                          "DNSName",
+                        ],
+                      },
+                      "/grafana",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PORT",
+                "Value": "3306",
+              },
+            ],
+            "Essential": true,
+            "Image": "grafana/oncall:v1.8.13",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "OncallServiceTaskDefinitionEngineLogGroup58254137",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "Engine",
+              },
+            },
+            "Name": "Engine",
+            "PortMappings": [
+              {
+                "ContainerPort": 8080,
+                "Protocol": "tcp",
+              },
+            ],
+            "ReadonlyRootFilesystem": false,
+            "Secrets": [
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceSecretKey09ED8344",
+                },
+              },
+              {
+                "Name": "MIRAGE_SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageSecretKeyAD3C2ECB",
+                },
+              },
+              {
+                "Name": "MIRAGE_CIPHER_IV",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageCipherIv620F5247",
+                },
+              },
+              {
+                "Name": "MYSQL_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_DB_NAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "Command": [
+              "sh",
+              "-c",
+              ""./celery_with_exporter.sh"",
+            ],
+            "DependsOn": [
+              {
+                "Condition": "SUCCESS",
+                "ContainerName": "DBMigration",
+              },
+            ],
+            "Environment": [
+              {
+                "Name": "DATABASE_TYPE",
+                "Value": "mysql",
+              },
+              {
+                "Name": "BROKER_TYPE",
+                "Value": "redis",
+              },
+              {
+                "Name": "BASE_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "OncallALBA2831EAA",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_URI",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "redis://",
+                      {
+                        "Fn::GetAtt": [
+                          "MemoryDBCluster95B2D5ED",
+                          "ClusterEndpoint.Address",
+                        ],
+                      },
+                      ":6379",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DJANGO_SETTINGS_MODULE",
+                "Value": "settings.helm",
+              },
+              {
+                "Name": "CELERY_WORKER_QUEUE",
+                "Value": "default,critical,long,slack,telegram,webhook,retry,celery,grafana",
+              },
+              {
+                "Name": "CELERY_WORKER_CONCURRENCY",
+                "Value": "1",
+              },
+              {
+                "Name": "CELERY_WORKER_MAX_TASKS_PER_CHILD",
+                "Value": "100",
+              },
+              {
+                "Name": "CELERY_WORKER_SHUTDOWN_INTERVAL",
+                "Value": "65m",
+              },
+              {
+                "Name": "CELERY_WORKER_BEAT_ENABLED",
+                "Value": "True",
+              },
+              {
+                "Name": "GRAFANA_API_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "MainALB27024B77",
+                          "DNSName",
+                        ],
+                      },
+                      "/grafana",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PORT",
+                "Value": "3306",
+              },
+            ],
+            "Essential": true,
+            "Image": "grafana/oncall:v1.8.13",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "OncallServiceTaskDefinitionCeleryLogGroup95B52C3A",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "Celery",
+              },
+            },
+            "Name": "Celery",
+            "ReadonlyRootFilesystem": false,
+            "Secrets": [
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceSecretKey09ED8344",
+                },
+              },
+              {
+                "Name": "MIRAGE_SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageSecretKeyAD3C2ECB",
+                },
+              },
+              {
+                "Name": "MIRAGE_CIPHER_IV",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageCipherIv620F5247",
+                },
+              },
+              {
+                "Name": "MYSQL_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_DB_NAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "Command": [
+              "python",
+              "manage.py",
+              "migrate",
+              "--noinput",
+            ],
+            "Environment": [
+              {
+                "Name": "DATABASE_TYPE",
+                "Value": "mysql",
+              },
+              {
+                "Name": "BROKER_TYPE",
+                "Value": "redis",
+              },
+              {
+                "Name": "BASE_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "OncallALBA2831EAA",
+                          "DNSName",
+                        ],
+                      },
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "REDIS_URI",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "redis://",
+                      {
+                        "Fn::GetAtt": [
+                          "MemoryDBCluster95B2D5ED",
+                          "ClusterEndpoint.Address",
+                        ],
+                      },
+                      ":6379",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DJANGO_SETTINGS_MODULE",
+                "Value": "settings.helm",
+              },
+              {
+                "Name": "CELERY_WORKER_QUEUE",
+                "Value": "default,critical,long,slack,telegram,webhook,retry,celery,grafana",
+              },
+              {
+                "Name": "CELERY_WORKER_CONCURRENCY",
+                "Value": "1",
+              },
+              {
+                "Name": "CELERY_WORKER_MAX_TASKS_PER_CHILD",
+                "Value": "100",
+              },
+              {
+                "Name": "CELERY_WORKER_SHUTDOWN_INTERVAL",
+                "Value": "65m",
+              },
+              {
+                "Name": "CELERY_WORKER_BEAT_ENABLED",
+                "Value": "True",
+              },
+              {
+                "Name": "GRAFANA_API_URL",
+                "Value": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      "http://",
+                      {
+                        "Fn::GetAtt": [
+                          "MainALB27024B77",
+                          "DNSName",
+                        ],
+                      },
+                      "/grafana",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PORT",
+                "Value": "3306",
+              },
+            ],
+            "Essential": false,
+            "Image": "grafana/oncall:v1.8.13",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "OncallServiceTaskDefinitionDBMigrationLogGroup03A7AB58",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "DBMigration",
+              },
+            },
+            "Name": "DBMigration",
+            "ReadonlyRootFilesystem": true,
+            "Secrets": [
+              {
+                "Name": "SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceSecretKey09ED8344",
+                },
+              },
+              {
+                "Name": "MIRAGE_SECRET_KEY",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageSecretKeyAD3C2ECB",
+                },
+              },
+              {
+                "Name": "MIRAGE_CIPHER_IV",
+                "ValueFrom": {
+                  "Ref": "OncallServiceMirageCipherIv620F5247",
+                },
+              },
+              {
+                "Name": "MYSQL_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_DB_NAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_USER",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "MYSQL_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraOncallDBSecret6B152582",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        "Cpu": "1024",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "OncallServiceTaskDefinitionExecutionRoleA03B48C1",
+            "Arn",
+          ],
+        },
+        "Family": "TargetOncallServiceTaskDefinition97537256",
+        "Memory": "2048",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+        },
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "OncallServiceTaskDefinitionTaskRole5F2A713A",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "OncallServiceTaskDefinitionCeleryLogGroup95B52C3A": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "OncallServiceTaskDefinitionDBMigrationLogGroup03A7AB58": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "OncallServiceTaskDefinitionEngineLogGroup58254137": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "OncallServiceTaskDefinitionExecutionRoleA03B48C1": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "OncallServiceTaskDefinitionExecutionRoleDefaultPolicy362302FA": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OncallServiceTaskDefinitionEngineLogGroup58254137",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "OncallServiceSecretKey09ED8344",
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "OncallServiceMirageSecretKeyAD3C2ECB",
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "OncallServiceMirageCipherIv620F5247",
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "AuroraOncallDBSecret6B152582",
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OncallServiceTaskDefinitionCeleryLogGroup95B52C3A",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "OncallServiceTaskDefinitionDBMigrationLogGroup03A7AB58",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "OncallServiceTaskDefinitionExecutionRoleDefaultPolicy362302FA",
+        "Roles": [
+          {
+            "Ref": "OncallServiceTaskDefinitionExecutionRoleA03B48C1",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "OncallServiceTaskDefinitionTaskRole5F2A713A": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
     "TargetAuroraSecret2DEF1BBF3fdaad7efa858a3daf9490cf0a702aeb": {
       "DeletionPolicy": "Delete",
@@ -594,6 +2149,44 @@ exports[`Snapshot test 1`] = `
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
             "AuroraBastionHostInstanceSecurityGroup3B0F6505",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "VpcNatSecurityGroupfromTargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49ALLTRAFFIC7C4201D1": {
+      "Properties": {
+        "Description": "from TargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49:ALL TRAFFIC",
+        "GroupId": {
+          "Fn::GetAtt": [
+            "VpcNatSecurityGroup810E8F8C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "VpcNatSecurityGroupfromTargetOncallServiceFargateServiceSecurityGroup62CBBD55ALLTRAFFIC729E90F0": {
+      "Properties": {
+        "Description": "from TargetOncallServiceFargateServiceSecurityGroup62CBBD55:ALL TRAFFIC",
+        "GroupId": {
+          "Fn::GetAtt": [
+            "VpcNatSecurityGroup810E8F8C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "OncallServiceFargateServiceSecurityGroup28BCC824",
             "GroupId",
           ],
         },
