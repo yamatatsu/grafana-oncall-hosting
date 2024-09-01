@@ -45,9 +45,11 @@ export class OncallService extends Construct {
 		const environment = {
 			DATABASE_TYPE: "mysql",
 			BROKER_TYPE: "redis",
-			BASE_URL: rootUrl, // "http://192.168.50.51:8080",
-			REDIS_URI: redisUri, // "redis://redis:6379/0",
-			DJANGO_SETTINGS_MODULE: "settings.prod_without_db",
+			BASE_URL: rootUrl,
+			REDIS_URI: redisUri,
+			// This setting `settings.helm` is useful for hosting on fargate as well.
+			// `settings.prod_without_db` includes `SECURE_SSL_REDIRECT = True`, so it needs to use custom domain with SSL.
+			DJANGO_SETTINGS_MODULE: "settings.helm",
 			CELERY_WORKER_QUEUE:
 				"default,critical,long,slack,telegram,webhook,retry,celery,grafana",
 			CELERY_WORKER_CONCURRENCY: "1",
