@@ -22,10 +22,6 @@ export class BackendStack extends cdk.Stack {
 
 		const vpc = new Vpc(this, "Vpc");
 
-		const alb = new Alb(this, "ALB", {
-			vpc: vpc.vpc,
-		});
-
 		const aurora = new Aurora(this, "Aurora", {
 			vpc: vpc.vpc,
 		});
@@ -54,8 +50,18 @@ export class BackendStack extends cdk.Stack {
 			return;
 		}
 
-		const grafanaRootUrl = `http://${alb.dnsName}/grafana`;
-		const oncallRootUrl = `http://${alb.dnsName}/oncall`;
+		const mainAlb = new Alb(this, "MainALB", {
+			vpc: vpc.vpc,
+		});
+		const oncallAlb = new Alb(this, "OncallALB", {
+			vpc: vpc.vpc,
+		});
+
+		/**
+		 * These URLs will be defined in `constants.ts` when the custom domain is used.
+		 */
+		const grafanaRootUrl = `http://${mainAlb.dnsName}/grafana`;
+		const oncallRootUrl = `http://${oncallAlb.dnsName}`;
 
 		const grafanaService = new GrafanaService(this, "GrafanaService", {
 			cluster: fargateCluster.cluster,
@@ -77,10 +83,21 @@ export class BackendStack extends cdk.Stack {
 		aurora.allowAccessDBFrom(oncallService.service);
 		memorydb.allowFrom(oncallService.service);
 
-		alb.listener.addTargetGroups("GrafanaTargetGroup", {
+		mainAlb.listener.addTargetGroups("GrafanaTargetGroup", {
 			targetGroups: [grafanaService.targetGroup],
+			/**
+			 * not used yet because this stack does not have the main web services.
+			 */
 			// conditions: [elb.ListenerCondition.pathPatterns(["/grafana/*"])],
 			// priority: 1,
+		});
+
+		/**
+		 * OnCall is not joined in main ALB because it is not able to handle subpath such as `/oncall/*`.
+		 * @see https://github.com/grafana/oncall/issues/4302
+		 */
+		oncallAlb.listener.addTargetGroups("OncallTargetGroup", {
+			targetGroups: [oncallService.targetGroup],
 		});
 	}
 }

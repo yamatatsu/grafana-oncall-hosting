@@ -1,5 +1,6 @@
 import * as ec2 from "aws-cdk-lib/aws-ec2";
 import * as ecs from "aws-cdk-lib/aws-ecs";
+import * as elb from "aws-cdk-lib/aws-elasticloadbalancingv2";
 import * as logs from "aws-cdk-lib/aws-logs";
 import * as secretsmanager from "aws-cdk-lib/aws-secretsmanager";
 import { Construct } from "constructs";
@@ -16,6 +17,7 @@ interface Props {
  */
 export class OncallService extends Construct {
 	public readonly service: ecs.BaseService;
+	public readonly targetGroup: elb.IApplicationTargetGroup;
 
 	constructor(scope: Construct, id: string, props: Props) {
 		super(scope, id);
@@ -59,6 +61,7 @@ export class OncallService extends Construct {
 		const engine = taskDef.addContainer("Engine", {
 			image: ecs.ContainerImage.fromRegistry("grafana/oncall:v1.8.13"),
 			command: ["uwsgi", "--ini", "uwsgi.ini"],
+			portMappings: [{ containerPort: 8080 }],
 			logging: ecs.LogDriver.awsLogs({
 				streamPrefix: "Engine",
 				logRetention: logs.RetentionDays.THREE_MONTHS,
@@ -118,6 +121,19 @@ export class OncallService extends Construct {
 			},
 		});
 
+		const targetGroup = new elb.ApplicationTargetGroup(
+			this,
+			"GrafanaTargetGroup",
+			{
+				vpc: cluster.vpc,
+				targets: [fargateService],
+				protocol: elb.ApplicationProtocol.HTTP,
+				port: 8080,
+				healthCheck: { path: "/health/", healthyHttpCodes: "200" },
+			},
+		);
+
 		this.service = fargateService;
+		this.targetGroup = targetGroup;
 	}
 }
