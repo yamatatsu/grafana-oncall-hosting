@@ -8,10 +8,12 @@ words:
   - elasticloadbalancingv2
   - Fargate
   - gcloud
+  - ingester
   - memorydb
   - noinput
   - Oncall
   - RABBITMQ
+  - tsup
   - uwsgi
 ignoreWords: []
 import: []

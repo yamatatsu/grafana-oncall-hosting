@@ -29,6 +29,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
 
   celery:
     image: grafana/oncall:v1.8.13
@@ -42,6 +44,8 @@ services:
         condition: service_completed_successfully
       redis:
         condition: service_healthy
+      db:
+        condition: service_healthy
 
   oncall_db_migration:
     image: grafana/oncall:v1.8.13
@@ -51,6 +55,8 @@ services:
       - oncall_data:/var/lib/oncall
     depends_on:
       redis:
+        condition: service_healthy
+      db:
         condition: service_healthy
 
   redis:
@@ -104,9 +110,28 @@ services:
           cpus: "0.5"
     profiles:
       - with_grafana
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: mydb
+    ports: 
+      - 3306:3306
+    volumes:
+      - mysql-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin" ,"ping", "-h", "localhost"]
+      interval: 1s
+      timeout: 1s
+      retries: 10
 
 volumes:
   grafana_data:
   prometheus_data:
   oncall_data:
   redis_data:
+  mysql-data:
