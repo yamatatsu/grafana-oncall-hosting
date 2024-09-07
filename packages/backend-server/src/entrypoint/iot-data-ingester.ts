@@ -38,6 +38,16 @@ async function main() {
 		const now = new Date();
 		console.info(`Inserting data at ${now.toISOString()}`);
 
+		const device1 = sineWave(now, {
+			periodicTimeMs: minToMs(10),
+			amplitude: 10,
+		});
+		const device2 = sineWave(now, {
+			periodicTimeMs: minToMs(10),
+			amplitude: 10,
+			phaseShiftMs: minToMs(2),
+		});
+
 		await Promise.all([
 			setTimeout(5_000),
 			prisma.iotData.createMany({
@@ -46,15 +56,10 @@ async function main() {
 						time: now,
 						gatewayName: "gateway1",
 						devices: {
-							device1: sineWave(now, {
-								periodicTimeMs: minToMs(10),
-								amplitude: 10,
-							}),
-							device2: sineWave(now, {
-								periodicTimeMs: minToMs(10),
-								amplitude: 10,
-								phaseShiftMs: minToMs(2),
-							}),
+							device1,
+							device1Error: device1 < 0,
+							device2,
+							device2Error: device2 < 0,
 						},
 					},
 				],
