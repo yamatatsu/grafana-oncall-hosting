@@ -14,7 +14,7 @@ interface Props {
  *
  * You can use new user restricted to SELECT specific table.
  * > CREATE USER 'grafana-cloud'@'%' IDENTIFIED BY '<<random password you'll set>>';
- * > GRANT SELECT ON mydb.PlcData TO 'grafana-cloud'@'%';
+ * > GRANT SELECT ON mydb.IotData TO 'grafana-cloud'@'%';
  */
 export class GrafanaPdcAgent extends Construct {
 	public readonly service: ecs.BaseService;
@@ -35,21 +35,31 @@ export class GrafanaPdcAgent extends Construct {
 		// Need to create the following SSM Parameters manually.
 		// You can get these values from Grafana Cloud.
 		// @see https://grafana.com/docs/grafana-cloud/connect-externally-hosted/private-data-source-connect/configure-pdc/#pdc-connection-steps
-		const pdcAgentToken = ssm.StringParameter.fromStringParameterName(
+		const pdcAgentToken = ssm.StringParameter.fromStringParameterAttributes(
 			this,
 			"PdcAgentToken",
-			"/grafana-oncall-hosting/pdc-agent-token",
+			{
+				parameterName: "/grafana-oncall-hosting/pdc-agent-token",
+				version: 2,
+			},
 		).stringValue;
-		const pdcAgentCluster = ssm.StringParameter.fromStringParameterName(
+		const pdcAgentCluster = ssm.StringParameter.fromStringParameterAttributes(
 			this,
 			"PdcAgentCluster",
-			"/grafana-oncall-hosting/pdc-agent-cluster",
+			{
+				parameterName: "/grafana-oncall-hosting/pdc-agent-cluster",
+				version: 2,
+			},
 		).stringValue;
-		const gcloudHostedGrafanaId = ssm.StringParameter.fromStringParameterName(
-			this,
-			"GcloudHostedGrafanaId",
-			"/grafana-oncall-hosting/gcloud-hosted-grafana-id",
-		).stringValue;
+		const gcloudHostedGrafanaId =
+			ssm.StringParameter.fromStringParameterAttributes(
+				this,
+				"GcloudHostedGrafanaId",
+				{
+					parameterName: "/grafana-oncall-hosting/gcloud-hosted-grafana-id",
+					version: 2,
+				},
+			).stringValue;
 
 		taskDef.addContainer("PdcAgent", {
 			image: ecs.ContainerImage.fromRegistry("grafana/pdc-agent:0.0.32"),
