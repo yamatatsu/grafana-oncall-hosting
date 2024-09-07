@@ -1,9 +1,13 @@
 import * as cdk from "aws-cdk-lib";
+import * as sns from "aws-cdk-lib/aws-sns";
+import * as snsSubscriptions from "aws-cdk-lib/aws-sns-subscriptions";
 import type { Construct } from "constructs";
 import { Alb } from "./alb";
 import { Aurora } from "./aurora";
 import { FargateCluster } from "./fargate-cluster";
+import { GrafanaPdcAgent } from "./grafana-pdc-agent";
 import { GrafanaService } from "./grafana-service";
+import { IotDataIngester } from "./iot-data-ingester";
 import { MemoryDB } from "./memorydb";
 import { OncallService } from "./oncall-service";
 import { Vpc } from "./vpc";
@@ -34,6 +38,26 @@ export class BackendStack extends cdk.Stack {
 		const fargateCluster = new FargateCluster(this, "FargateCluster", {
 			vpc: vpc.vpc,
 		});
+
+		const grafanaPdcAgent = new GrafanaPdcAgent(this, "GrafanaPdcAgent", {
+			cluster: fargateCluster.cluster,
+		});
+		vpc.allowOutboundFrom(grafanaPdcAgent.service);
+		aurora.allowAccessDBFrom(grafanaPdcAgent.service);
+
+		const iotDataIngester = new IotDataIngester(this, "IotDataIngester", {
+			cluster: fargateCluster.cluster,
+			dbRootSecret: aurora.dbRootSecret,
+		});
+		vpc.allowOutboundFrom(iotDataIngester.service);
+		aurora.allowAccessDBFrom(iotDataIngester.service);
+
+		const alertTopic = new sns.Topic(this, "AlertTopic");
+		alertTopic.addSubscription(
+			new snsSubscriptions.UrlSubscription(
+				"https://oncall-prod-us-central-0.grafana.net/oncall/integrations/v1/amazon_sns/VYAueEPpd2c0e6vZG3QJKgTID/",
+			),
+		);
 
 		/**
 		 * Add this context `isGrafanaDatabaseCreated` after create database and user in aurora with below commands:

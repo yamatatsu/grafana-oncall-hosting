@@ -10,6 +10,7 @@ FROM base AS dev
 COPY . /usr/src/app
 WORKDIR /usr/src/app
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN pnpm --filter ./packages/backend-server exec prisma generate
 
 FROM dev AS build
 RUN pnpm run -r build
@@ -17,14 +18,9 @@ RUN pnpm deploy --filter=backend-server --prod /prod/backend-server
 
 FROM dev AS iot-data-ingester-dev
 WORKDIR /usr/src/app/packages/backend-server
-RUN pnpm prisma generate
 CMD [ "pnpm", "iot-data-ingester:dev" ]
 
-FROM base AS iot-data-ingester-build
-WORKDIR /usr/src/app/packages/backend-server
-RUN pnpm prisma generate
-
-FROM iot-data-ingester-build AS iot-data-ingester
+FROM base AS iot-data-ingester
 COPY --from=build /prod/backend-server /prod/backend-server
 WORKDIR /prod/backend-server
 CMD [ "pnpm", "start" ]

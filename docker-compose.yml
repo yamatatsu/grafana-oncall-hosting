@@ -114,6 +114,37 @@ services:
       db:
         condition: service_healthy
 
+  iot-data-ingester:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: iot-data-ingester
+    environment:
+      DB_HOST: db
+      DB_DBNAME: mydb
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    depends_on:
+      db:
+        condition: service_healthy
+      prisma-deploy:
+        condition: service_completed_successfully
+
+  prisma-deploy:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: iot-data-ingester-dev
+    environment:
+      DB_HOST: db
+      DB_DBNAME: mydb
+      DB_USERNAME: root
+      DB_PASSWORD: root
+    command: [pnpm, prisma, migrate, deploy]
+    depends_on:
+      db:
+        condition: service_healthy
+
   db:
     image: mysql:8.0
     environment:

@@ -5,11 +5,13 @@ dictionaries: []
 words:
   - amazonmq
   - dbname
+  - dotenvx
   - elasticloadbalancingv2
   - Fargate
   - gcloud
   - ingester
   - memorydb
+  - mydb
   - noinput
   - Oncall
   - RABBITMQ

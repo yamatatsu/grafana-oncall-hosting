@@ -4,24 +4,24 @@
 	"version": "1.0.0",
 	"type": "module",
 	"scripts": {
-		"start": "node dist/index.js",
-		"prisma": "dotenv -e .env.dev -e .env -- prisma",
-		"iot-data-ingester:dev": "dotenv -e .env.dev -e .env -- tsx watch ./src/entrypoint/iot-data-ingester.ts",
+		"start": "dotenvx run -f .env -- node dist/index.js",
+		"prisma:dev": "dotenvx run -f .env.dev -f .env -- prisma",
+		"iot-data-ingester:dev": "dotenvx run -f .env.dev -f .env -- tsx watch ./src/entrypoint/iot-data-ingester.ts",
 		"iot-data-ingester:build": "tsup --entry.index ./src/entrypoint/iot-data-ingester.ts --clean --format=esm --sourcemap",
 		"type-check": "tsc"
 	},
 	"dependencies": {
+		"@dotenvx/dotenvx": "^1.14.0",
 		"@prisma/client": "^5.17.0",
 		"cors": "^2.8.5",
-		"express": "^4.19.2"
+		"express": "^4.19.2",
+		"prisma": "^5.17.0"
 	},
 	"devDependencies": {
 		"@types/cors": "^2.8.17",
 		"@types/express": "^4.17.21",
 		"@types/node": "^20.14.10",
-		"dotenv-cli": "^7.4.2",
 		"esbuild": "0.21.4",
-		"prisma": "^5.17.0",
 		"tsup": "^8.1.0",
 		"tsx": "^4.16.2",
 		"typescript": "~5.0.0",
