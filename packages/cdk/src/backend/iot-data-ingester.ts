@@ -32,7 +32,7 @@ export class IotDataIngester extends Construct {
 			image: ecs.ContainerImage.fromAsset("../../", {
 				target: "iot-data-ingester",
 				ignoreMode: cdk.IgnoreMode.DOCKER,
-				exclude: ["**/node_modules", ".git", "**/cdk.out"],
+				exclude: ["**/node_modules", ".git", "packages/cdk"],
 			}),
 			logging: ecs.LogDriver.awsLogs({
 				streamPrefix: "IotDataIngester",
@@ -52,7 +52,7 @@ export class IotDataIngester extends Construct {
 			image: ecs.ContainerImage.fromAsset("../../", {
 				target: "iot-data-ingester-dev",
 				ignoreMode: cdk.IgnoreMode.DOCKER,
-				exclude: ["**/node_modules", ".git", "**/cdk.out"],
+				exclude: ["**/node_modules", ".git", "packages/cdk"],
 			}),
 			command: ["pnpm", "prisma", "migrate", "deploy"],
 			logging: ecs.LogDriver.awsLogs({

@@ -5,3 +5,4 @@ node_modules
 .gitignore
 *.md
 dist
+packages/cdk
