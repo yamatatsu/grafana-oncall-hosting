@@ -43,21 +43,19 @@ async function main() {
 			prisma.iotData.createMany({
 				data: [
 					{
-						timestamp: now,
-						dataName: "iot1",
-						value: sineWave(now, {
-							periodicTimeMs: minToMs(10),
-							amplitude: 10,
-						}),
-					},
-					{
-						timestamp: now,
-						dataName: "iot2",
-						value: sineWave(now, {
-							periodicTimeMs: minToMs(10),
-							amplitude: 10,
-							phaseShiftMs: minToMs(2),
-						}),
+						time: now,
+						gatewayName: "gateway1",
+						devices: {
+							device1: sineWave(now, {
+								periodicTimeMs: minToMs(10),
+								amplitude: 10,
+							}),
+							device2: sineWave(now, {
+								periodicTimeMs: minToMs(10),
+								amplitude: 10,
+								phaseShiftMs: minToMs(2),
+							}),
+						},
 					},
 				],
 			}),

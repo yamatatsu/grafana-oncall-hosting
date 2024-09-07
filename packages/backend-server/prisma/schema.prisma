@@ -14,10 +14,10 @@ datasource db {
 }
 
 model IotData {
-  iotDataId Int      @id @default(autoincrement())
-  dataName  String
-  timestamp DateTime
-  value     Float
+  iotDataId   Int      @id @default(autoincrement())
+  gatewayName String
+  time        DateTime
+  devices     Json
 
-  @@unique([timestamp, dataName])
+  @@unique([time, gatewayName])
 }
