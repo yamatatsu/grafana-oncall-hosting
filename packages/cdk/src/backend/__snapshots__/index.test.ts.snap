@@ -26,6 +26,19 @@ exports[`Snapshot test 1`] = `
     },
   },
   "Resources": {
+    "AlertTopic2720D535": {
+      "Type": "AWS::SNS::Topic",
+    },
+    "AlertTopichttpsoncallproduscentral0grafananetoncallintegrationsv1amazonsnsVYAueEPpd2c0e6vZG3QJKgTID0928EFCB": {
+      "Properties": {
+        "Endpoint": "https://oncall-prod-us-central-0.grafana.net/oncall/integrations/v1/amazon_sns/VYAueEPpd2c0e6vZG3QJKgTID/",
+        "Protocol": "https",
+        "TopicArn": {
+          "Ref": "AlertTopic2720D535",
+        },
+      },
+      "Type": "AWS::SNS::Subscription",
+    },
     "Aurora3FE0D001": {
       "DeletionPolicy": "Delete",
       "Properties": {
@@ -303,6 +316,27 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
+    "AuroraSecurityGroupfromTargetGrafanaPdcAgentFargateServiceSecurityGroup44C6C3C0330621DE5F8E": {
+      "Properties": {
+        "Description": "from TargetGrafanaPdcAgentFargateServiceSecurityGroup44C6C3C0:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraSecurityGroup467E7067",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaPdcAgentFargateServiceSecurityGroupAA311E92",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
     "AuroraSecurityGroupfromTargetGrafanaServiceFargateServiceSecurityGroupCF5CFB493306D7CF666F": {
       "Properties": {
         "Description": "from TargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49:3306",
@@ -317,6 +351,27 @@ exports[`Snapshot test 1`] = `
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
             "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+        "ToPort": 3306,
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "AuroraSecurityGroupfromTargetIotDataIngesterFargateServiceSecurityGroup5719E9B33306A98EA2C8": {
+      "Properties": {
+        "Description": "from TargetIotDataIngesterFargateServiceSecurityGroup5719E9B3:3306",
+        "FromPort": 3306,
+        "GroupId": {
+          "Fn::GetAtt": [
+            "AuroraSecurityGroup467E7067",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "tcp",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "IotDataIngesterFargateServiceSecurityGroup0B611246",
             "GroupId",
           ],
         },
@@ -378,7 +433,214 @@ exports[`Snapshot test 1`] = `
       "UpdateReplacePolicy": "Delete",
     },
     "FargateCluster76631EA2": {
+      "Properties": {
+        "ClusterSettings": [
+          {
+            "Name": "containerInsights",
+            "Value": "enabled",
+          },
+        ],
+      },
       "Type": "AWS::ECS::Cluster",
+    },
+    "GrafanaPdcAgentFargateService0798C719": {
+      "DependsOn": [
+        "GrafanaPdcAgentTaskDefinitionTaskRoleBEE79DE5",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "FargateCluster76631EA2",
+        },
+        "DeploymentConfiguration": {
+          "Alarms": {
+            "AlarmNames": [],
+            "Enable": false,
+            "Rollback": false,
+          },
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": false,
+          },
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+        },
+        "DeploymentController": {
+          "Type": "ECS",
+        },
+        "DesiredCount": 1,
+        "EnableECSManagedTags": false,
+        "LaunchType": "FARGATE",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "GrafanaPdcAgentFargateServiceSecurityGroupAA311E92",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+              },
+              {
+                "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "GrafanaPdcAgentTaskDefinition3CF01727",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "GrafanaPdcAgentFargateServiceSecurityGroupAA311E92": {
+      "DependsOn": [
+        "GrafanaPdcAgentTaskDefinitionTaskRoleBEE79DE5",
+      ],
+      "Properties": {
+        "GroupDescription": "Target/GrafanaPdcAgent/FargateService/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "GrafanaPdcAgentTaskDefinition3CF01727": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "Command": [
+              "-token",
+              "{{resolve:ssm:/grafana-oncall-hosting/pdc-agent-token:2}}",
+              "-cluster",
+              "{{resolve:ssm:/grafana-oncall-hosting/pdc-agent-cluster:2}}",
+              "-gcloud-hosted-grafana-id",
+              "{{resolve:ssm:/grafana-oncall-hosting/gcloud-hosted-grafana-id:2}}",
+            ],
+            "Essential": true,
+            "Image": "grafana/pdc-agent:0.0.32",
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "GrafanaPdcAgentTaskDefinitionPdcAgentLogGroup643F8816",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "PdcAgent",
+              },
+            },
+            "Name": "PdcAgent",
+            "ReadonlyRootFilesystem": false,
+          },
+        ],
+        "Cpu": "256",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "GrafanaPdcAgentTaskDefinitionExecutionRoleA9A98010",
+            "Arn",
+          ],
+        },
+        "Family": "TargetGrafanaPdcAgentTaskDefinition459802BB",
+        "Memory": "512",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+        },
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "GrafanaPdcAgentTaskDefinitionTaskRoleBEE79DE5",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "GrafanaPdcAgentTaskDefinitionExecutionRoleA9A98010": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "GrafanaPdcAgentTaskDefinitionExecutionRoleDefaultPolicy373A1E66": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "GrafanaPdcAgentTaskDefinitionPdcAgentLogGroup643F8816",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "GrafanaPdcAgentTaskDefinitionExecutionRoleDefaultPolicy373A1E66",
+        "Roles": [
+          {
+            "Ref": "GrafanaPdcAgentTaskDefinitionExecutionRoleA9A98010",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "GrafanaPdcAgentTaskDefinitionPdcAgentLogGroup643F8816": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "GrafanaPdcAgentTaskDefinitionTaskRoleBEE79DE5": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
     "GrafanaServiceFargateService4FE727BA": {
       "DependsOn": [
@@ -547,11 +809,11 @@ exports[`Snapshot test 1`] = `
               },
               {
                 "Name": "GF_INSTALL_PLUGINS",
-                "Value": "grafana-oncall-app vv1.8.13",
+                "Value": "grafana-oncall-app vv1.9.20",
               },
             ],
             "Essential": true,
-            "Image": "grafana/grafana:11.1.4",
+            "Image": "grafana/grafana:11.2.0",
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -761,6 +1023,414 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::SecretsManager::Secret",
       "UpdateReplacePolicy": "Delete",
+    },
+    "IotDataIngesterFargateService5C97F8EF": {
+      "DependsOn": [
+        "IotDataIngesterTaskDefinitionTaskRoleD2C0D170",
+      ],
+      "Properties": {
+        "Cluster": {
+          "Ref": "FargateCluster76631EA2",
+        },
+        "DeploymentConfiguration": {
+          "Alarms": {
+            "AlarmNames": [],
+            "Enable": false,
+            "Rollback": false,
+          },
+          "DeploymentCircuitBreaker": {
+            "Enable": true,
+            "Rollback": false,
+          },
+          "MaximumPercent": 200,
+          "MinimumHealthyPercent": 50,
+        },
+        "DeploymentController": {
+          "Type": "ECS",
+        },
+        "DesiredCount": 1,
+        "EnableECSManagedTags": false,
+        "LaunchType": "FARGATE",
+        "NetworkConfiguration": {
+          "AwsvpcConfiguration": {
+            "AssignPublicIp": "DISABLED",
+            "SecurityGroups": [
+              {
+                "Fn::GetAtt": [
+                  "IotDataIngesterFargateServiceSecurityGroup0B611246",
+                  "GroupId",
+                ],
+              },
+            ],
+            "Subnets": [
+              {
+                "Ref": "VpcPrivateSubnet1Subnet67A4DBCB",
+              },
+              {
+                "Ref": "VpcPrivateSubnet2SubnetC8EB537D",
+              },
+            ],
+          },
+        },
+        "TaskDefinition": {
+          "Ref": "IotDataIngesterTaskDefinition2888B13A",
+        },
+      },
+      "Type": "AWS::ECS::Service",
+    },
+    "IotDataIngesterFargateServiceSecurityGroup0B611246": {
+      "DependsOn": [
+        "IotDataIngesterTaskDefinitionTaskRoleD2C0D170",
+      ],
+      "Properties": {
+        "GroupDescription": "Target/IotDataIngester/FargateService/SecurityGroup",
+        "SecurityGroupEgress": [
+          {
+            "CidrIp": "0.0.0.0/0",
+            "Description": "Allow all outbound traffic by default",
+            "IpProtocol": "-1",
+          },
+        ],
+        "VpcId": {
+          "Ref": "VpcC3027511",
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroup",
+    },
+    "IotDataIngesterTaskDefinition2888B13A": {
+      "Properties": {
+        "ContainerDefinitions": [
+          {
+            "DependsOn": [
+              {
+                "Condition": "COMPLETE",
+                "ContainerName": "DBMigration",
+              },
+            ],
+            "Essential": true,
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:b59516b9c880c4663b53d0eb983451655f504fcc4997a522a93172bbaea91fca",
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "IotDataIngesterTaskDefinitionIotDataIngesterLogGroup3760644C",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "IotDataIngester",
+              },
+            },
+            "Name": "IotDataIngester",
+            "ReadonlyRootFilesystem": false,
+            "Secrets": [
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_DBNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+          {
+            "Command": [
+              "pnpm",
+              "prisma",
+              "migrate",
+              "deploy",
+            ],
+            "Essential": false,
+            "Image": {
+              "Fn::Sub": "\${AWS::AccountId}.dkr.ecr.\${AWS::Region}.\${AWS::URLSuffix}/cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}:2b1637ab09df932954e5da41b600c5e2d13927a0d2a0cb0325fd2efa66eaf364",
+            },
+            "LogConfiguration": {
+              "LogDriver": "awslogs",
+              "Options": {
+                "awslogs-group": {
+                  "Ref": "IotDataIngesterTaskDefinitionDBMigrationLogGroup86D1C49B",
+                },
+                "awslogs-region": {
+                  "Ref": "AWS::Region",
+                },
+                "awslogs-stream-prefix": "DBMigration",
+              },
+            },
+            "Name": "DBMigration",
+            "ReadonlyRootFilesystem": true,
+            "Secrets": [
+              {
+                "Name": "DB_HOST",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":host::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_DBNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":dbname::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_USERNAME",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":username::",
+                    ],
+                  ],
+                },
+              },
+              {
+                "Name": "DB_PASSWORD",
+                "ValueFrom": {
+                  "Fn::Join": [
+                    "",
+                    [
+                      {
+                        "Ref": "AuroraSecretAttachment3E825A9F",
+                      },
+                      ":password::",
+                    ],
+                  ],
+                },
+              },
+            ],
+          },
+        ],
+        "Cpu": "256",
+        "ExecutionRoleArn": {
+          "Fn::GetAtt": [
+            "IotDataIngesterTaskDefinitionExecutionRoleA621855D",
+            "Arn",
+          ],
+        },
+        "Family": "TargetIotDataIngesterTaskDefinition93E59E46",
+        "Memory": "512",
+        "NetworkMode": "awsvpc",
+        "RequiresCompatibilities": [
+          "FARGATE",
+        ],
+        "RuntimePlatform": {
+          "CpuArchitecture": "ARM64",
+        },
+        "TaskRoleArn": {
+          "Fn::GetAtt": [
+            "IotDataIngesterTaskDefinitionTaskRoleD2C0D170",
+            "Arn",
+          ],
+        },
+      },
+      "Type": "AWS::ECS::TaskDefinition",
+    },
+    "IotDataIngesterTaskDefinitionDBMigrationLogGroup86D1C49B": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "IotDataIngesterTaskDefinitionExecutionRoleA621855D": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
+    },
+    "IotDataIngesterTaskDefinitionExecutionRoleDefaultPolicy07384351": {
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "ecr:BatchCheckLayerAvailability",
+                "ecr:GetDownloadUrlForLayer",
+                "ecr:BatchGetImage",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::Join": [
+                  "",
+                  [
+                    "arn:",
+                    {
+                      "Ref": "AWS::Partition",
+                    },
+                    ":ecr:",
+                    {
+                      "Ref": "AWS::Region",
+                    },
+                    ":",
+                    {
+                      "Ref": "AWS::AccountId",
+                    },
+                    ":repository/",
+                    {
+                      "Fn::Sub": "cdk-hnb659fds-container-assets-\${AWS::AccountId}-\${AWS::Region}",
+                    },
+                  ],
+                ],
+              },
+            },
+            {
+              "Action": "ecr:GetAuthorizationToken",
+              "Effect": "Allow",
+              "Resource": "*",
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "IotDataIngesterTaskDefinitionIotDataIngesterLogGroup3760644C",
+                  "Arn",
+                ],
+              },
+            },
+            {
+              "Action": [
+                "secretsmanager:GetSecretValue",
+                "secretsmanager:DescribeSecret",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Ref": "AuroraSecretAttachment3E825A9F",
+              },
+            },
+            {
+              "Action": [
+                "logs:CreateLogStream",
+                "logs:PutLogEvents",
+              ],
+              "Effect": "Allow",
+              "Resource": {
+                "Fn::GetAtt": [
+                  "IotDataIngesterTaskDefinitionDBMigrationLogGroup86D1C49B",
+                  "Arn",
+                ],
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+        "PolicyName": "IotDataIngesterTaskDefinitionExecutionRoleDefaultPolicy07384351",
+        "Roles": [
+          {
+            "Ref": "IotDataIngesterTaskDefinitionExecutionRoleA621855D",
+          },
+        ],
+      },
+      "Type": "AWS::IAM::Policy",
+    },
+    "IotDataIngesterTaskDefinitionIotDataIngesterLogGroup3760644C": {
+      "DeletionPolicy": "Retain",
+      "Properties": {
+        "RetentionInDays": 90,
+      },
+      "Type": "AWS::Logs::LogGroup",
+      "UpdateReplacePolicy": "Retain",
+    },
+    "IotDataIngesterTaskDefinitionTaskRoleD2C0D170": {
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRole",
+              "Effect": "Allow",
+              "Principal": {
+                "Service": "ecs-tasks.amazonaws.com",
+              },
+            },
+          ],
+          "Version": "2012-10-17",
+        },
+      },
+      "Type": "AWS::IAM::Role",
     },
     "MainALB27024B77": {
       "DependsOn": [
@@ -1286,7 +1956,7 @@ exports[`Snapshot test 1`] = `
               },
             ],
             "Essential": true,
-            "Image": "grafana/oncall:v1.8.13",
+            "Image": "grafana/oncall:v1.9.20",
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1488,7 +2158,7 @@ exports[`Snapshot test 1`] = `
               },
             ],
             "Essential": true,
-            "Image": "grafana/oncall:v1.8.13",
+            "Image": "grafana/oncall:v1.9.20",
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -1679,7 +2349,7 @@ exports[`Snapshot test 1`] = `
               },
             ],
             "Essential": false,
-            "Image": "grafana/oncall:v1.8.13",
+            "Image": "grafana/oncall:v1.9.20",
             "LogConfiguration": {
               "LogDriver": "awslogs",
               "Options": {
@@ -2155,6 +2825,25 @@ exports[`Snapshot test 1`] = `
       },
       "Type": "AWS::EC2::SecurityGroupIngress",
     },
+    "VpcNatSecurityGroupfromTargetGrafanaPdcAgentFargateServiceSecurityGroup44C6C3C0ALLTRAFFICB3AF1AC4": {
+      "Properties": {
+        "Description": "from TargetGrafanaPdcAgentFargateServiceSecurityGroup44C6C3C0:ALL TRAFFIC",
+        "GroupId": {
+          "Fn::GetAtt": [
+            "VpcNatSecurityGroup810E8F8C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "GrafanaPdcAgentFargateServiceSecurityGroupAA311E92",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
     "VpcNatSecurityGroupfromTargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49ALLTRAFFIC7C4201D1": {
       "Properties": {
         "Description": "from TargetGrafanaServiceFargateServiceSecurityGroupCF5CFB49:ALL TRAFFIC",
@@ -2168,6 +2857,25 @@ exports[`Snapshot test 1`] = `
         "SourceSecurityGroupId": {
           "Fn::GetAtt": [
             "GrafanaServiceFargateServiceSecurityGroupB6FC9E23",
+            "GroupId",
+          ],
+        },
+      },
+      "Type": "AWS::EC2::SecurityGroupIngress",
+    },
+    "VpcNatSecurityGroupfromTargetIotDataIngesterFargateServiceSecurityGroup5719E9B3ALLTRAFFIC7AA386B6": {
+      "Properties": {
+        "Description": "from TargetIotDataIngesterFargateServiceSecurityGroup5719E9B3:ALL TRAFFIC",
+        "GroupId": {
+          "Fn::GetAtt": [
+            "VpcNatSecurityGroup810E8F8C",
+            "GroupId",
+          ],
+        },
+        "IpProtocol": "-1",
+        "SourceSecurityGroupId": {
+          "Fn::GetAtt": [
+            "IotDataIngesterFargateServiceSecurityGroup0B611246",
             "GroupId",
           ],
         },

@@ -18,7 +18,7 @@ export class FargateCluster extends Construct {
 
 		const cluster = new ecs.Cluster(this, "Cluster", {
 			vpc,
-			// containerInsights: true,
+			containerInsights: true,
 		});
 
 		this.cluster = cluster;
